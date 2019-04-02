@@ -1,11 +1,13 @@
+export LD_LIBRARY_PATH=/opt/local/lib
+#/bin/bash
 #shell-variable
 DIRSTACKSIZE=10
 fignore=(.o \~)
 WORDCHARS='*?_-.[]~=&;!#$%^(){}<>'
-# fpath=(~/myfunc $fpath)
+fpath=(~/myfunc $fpath)
 #zstyle
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
-eval `dircolors`
+# eval `dircolors`
 LSCOLORS=fxexcxdxbxegedabagacad
 #zstyle ':completion:*' list-colors ${(s.:.)LSCOLORS}
 zstyle ':completion:*' list-colors di=34 ln=35 ex=31
@@ -69,13 +71,51 @@ bindkey "^J" push-line
 bindkey "^'" quote-line
 #prompt
 PS1="%{${fg[cyan]}%}%n%{${fg[default]}%} %#"
-RPS1="%{${fg[cyan]}%}[%~]%{${fg[default]}%}"
+RPROMPT="%{${fg[cyan]}%}[%~]%{${reset_color}%}"
 SPROMPT="%{${fg[green]}%}zsh: correct '%R' to '%r' [nyae]?%{${fg[default]}%} "
+autoload -Uz vcs_info
+setopt prompt_subst
+zstyle ':vcs_info:git:*' check-for-changes true
+zstyle ':vcs_info:git:*' stagedstr "%F{yellow}!"
+zstyle ':vcs_info:git:*' unstagedstr "%F{red}+"
+zstyle ':vcs_info:*' formats "%F{green}%c%u[%b]%f"
+zstyle ':vcs_info:*' actionformats '[%b|%a]'
+precmd () { vcs_info }
+RPROMPT=$RPROMPT'${vcs_info_msg_0_}'
+
 #history
 SAVEHIST=100000
 HISTSIZE=100000
 HISTFILE=~/.zhistory
 
+function getDefaultBrowser() {
+    preffile=$HOME/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure
+    if [ ! -f ${preffile}.plist ]; then
+        preffile=$HOME/Library/Preferences/com.apple.LaunchServices
+    fi
+    # browser might be "com.apple.safari", "org.mozilla.firefox" or "com.google.chrome".
+    browser=$(defaults read ${preffile} | grep -B 1 "https" | awk '/LSHandlerRoleAll/{ print $NF }' | sed -e 's/"//g;s/;//')
+}
+
+function gitblit() {
+    nsip=$(host fun.bio.keio.ac.jp | head -1 | awk '{print $4}')
+    browser=$(getDefaultBrowser)
+    if [ ${browser} = "com.google.chrome" ]; then
+        browser="org.mozilla.firefox"
+    fi
+    if [ ${nsip} = 192.168.11.2 ]; then
+        # in FUNALAB private network
+        open -b ${browser} http://fun.bio.keio.ac.jp:8080
+    else
+        # outside FUNALAB
+        open -b org.mozilla.firefox https://fun.bio.keio.ac.jp:8443
+    fi
+    unset nsip
+    unset browser
+    }
+
+
+cat /Users/nishimoto/mygo/ansize/donkey.ansi
 #
 # Goolge Search by Google Chrome
 #
@@ -91,3 +131,6 @@ google() {
     fi
     open -a Google\ Chrome http://www.google.co.jp/$opt
     }
+
+
+# alias ll='say hello'
